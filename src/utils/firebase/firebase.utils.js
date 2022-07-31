@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithRedirect, signInWithPopup, GoogleAuthProvider } from 'firebase/auth'; //pagsetup ng authentication
+import { getAuth, signInWithRedirect, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword } from 'firebase/auth'; //pagsetup ng authentication
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 
 // Your web app's Firebase configuration
@@ -29,7 +29,7 @@ const firebaseConfig = {
   const provider = new GoogleAuthProvider(); //this will give you back the provider instance
   // this custom parameters will take some kind of configuration object and with it we can tell different ways that we want the GoogleAuthProvider to behave.
     provider.setCustomParameters({
-      prompt: "select_account" //ito, whenever someone interacts with our provider we always wants to force them to select and account
+      prompt: "select_account" //ito, whenever someone interacts with our provider we always wants to force them to select an account
     })
 
   //Need to export our authentication
@@ -40,7 +40,7 @@ const firebaseConfig = {
   const db = getFirestore();
 
   //pagcreate ng user document
-  export const createUserDocumentFromAuth = async (userAuth) => {
+  export const createUserDocumentFromAuth = async (userAuth, additionalInformation = {}) => {
     //user document reference
     const userDocRef = doc(db, 'users', userAuth.uid); //doc has 3 parameters (database, collection, identifier or the unique id)
     console.log(userDocRef);
@@ -59,7 +59,8 @@ const firebaseConfig = {
         await setDoc(userDocRef, {
           displayName,
           email,
-          createdAt
+          createdAt,
+          ...additionalInformation
         });
       } catch (error) {
         console.log('error creating user', error.message);
@@ -68,5 +69,11 @@ const firebaseConfig = {
 
     //if user data exists
     //if user data does not exists
-
+    return userDocRef;
   }
+
+  export const createAuthUserWithEmailAndPassword = async (email, password ) => {
+    if(!email || !password) return;
+
+    return await createUserWithEmailAndPassword(auth, email, password);
+  } 
